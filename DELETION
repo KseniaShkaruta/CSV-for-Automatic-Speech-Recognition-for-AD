@@ -6,10 +6,8 @@ df = pd.read_csv('C:/Users/toshiba/Documents/test.csv')
 print(df.head(3))
 tr = json.loads(df.iloc[0,2])
 
-print(tr)
-
 for sublist in tr:
-    #print(sublist['tokens'][0]['value'])
     for i in range(len(sublist['tokens'])):
-        print(sublist['tokens'][i]['value'])
-        sublist['tokens'].pop(i)
+        if sublist['tokens'][i]['value']== 'thank':
+           print(sublist['tokens'][i])
+               del sublist['tokens'][i]
