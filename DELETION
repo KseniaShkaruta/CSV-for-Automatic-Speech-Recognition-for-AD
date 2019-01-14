@@ -6,8 +6,37 @@ df = pd.read_csv('C:/Users/toshiba/Documents/test.csv')
 print(df.head(3))
 tr = json.loads(df.iloc[0,2])
 
-for sublist in tr:
-    for i in range(len(sublist['tokens'])):
-        if sublist['tokens'][i]['value']== 'thank':
-           print(sublist['tokens'][i])
-               del sublist['tokens'][i]
+# function to count number of tokens
+def tokens_count(transcript):
+    return len(transcript)
+
+# function to count number of words in transcript
+def word_count(transcript):
+    cnt = 0
+    for sublist in tr:
+        for i in range(len(sublist['tokens'])):
+            if sublist['tokens'][i]['type'] == 'word':
+                cnt +=1
+    return print(cnt)
+
+# function to store transcript into two new lists
+def transcript (transcript):
+    a = 2
+    temp_lst = [[] for _ in range(a)]   
+    new_lst = [[] for _ in range(a)]   
+    
+    for sublist in tr:    
+        for i in range(len(sublist['tokens'])):
+            if sublist['tokens'][i]['value']== 'thank':
+           #print(sublist['tokens'][i])
+               temp_lst = sublist['tokens'][i]
+               print(temp_lst)
+               print("this is the delete")
+            else:
+                new_lst = sublist['tokens'][i]            
+           # print(new_lst)
+        return temp_lst, new_lst
+
+word_count(tr)
+tokens_count(tr)
+transcript(tr)
