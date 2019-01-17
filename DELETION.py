@@ -12,8 +12,8 @@ tr = json.loads(df.iloc[0,2])
 def flatten(transcript):    
     flat_list = []
     for sublist in transcript: 
-        for i in range(len(sublist['tokens'])):
-            flat_list.append(sublist['tokens'][i])
+        for i in sublist['tokens']:
+            flat_list.append(i)
     return flat_list
 
 flat_tr = flatten(tr)
@@ -30,27 +30,31 @@ def word_count(transcript):
 num_words = word_count(flat_tr)
 print(num_words)
 
-#generate list with random numbers
-def del_list(num_words, del_rate):    
-    del_words = int(num_words * del_rate)
-    list=[]
-    while len(list) < del_words:
-        r=random.randint(0,num_words)
-        if r not in list: 
-            list.append(r)
-    list.sort()
-    return list
+#create two lists: 1.deleted words, 2. indeces of deleted words
+del_rate = 0.2
+del_words = int(num_words * del_rate)
+ind_list=[]
+del_w = []
 
-del_indx = del_list(num_words, 0.2)
-print(del_indx)
+while len(ind_list) < del_words:
+    r=random.randint(0,num_words)
+    if r not in list:                
+        if flat_tr[r]['type'] == 'word':
+            ind_list.append(r)
+            del_w.append([flat_tr[r]])
     
-m = 0
-i = 0
-temp = []
-if len(temp) < (len(del_indx)):
-    if flat_tr[del_indx[i]]['type'] == 'word':
-        temp.append([flat_tr[del_indx[i]]])
-        i +=1
-       
-print(len(temp))
-print(temp)
+print(len(ind_list))
+print(len(del_w))
+print(del_w)
+print(ind_list)
+
+#create new transcript without the deleted words
+def new_tr(transcript, del_indx):    
+    del_indx.sort()
+    new_tr = []
+    m = 0
+    i = 0
+    for i in range (len(transcript)):
+        if i not in del_indx:          
+            new_tr.append(transcript[i])
+    return new_tr
