@@ -4,8 +4,7 @@ import random
 
 #read in csv file, delete 20% of words from json manual transcript, output csv with altered manual transcript as new column
 df = pd.read_csv('C:/temp/ASRforAD.csv')
-#df['json_with_deletion'], df['json_deleted_words'] = df.apply(lambda df : pd.Series(test_fn(df['json_utterances_man'])), axis =1)
-df['json_man_with_deletion'] = df.apply(lambda df : del_fn(df['json_utterances_man']), axis =1)
+df = df.merge(df.json_utterances_man.apply(lambda s: pd.Series(del_fn(s))), left_index=True, right_index=True)
 df.to_csv('C:/temp/DELETION_ASRforAD.csv')
 
 print(df.head())
@@ -55,4 +54,4 @@ def del_words(transcript, del_rate):
     for i in range (len(transcript)):
         if i not in del_indx:          
             new_tr.append(transcript[i])
-    return new_tr
+    return del_w, new_tr
