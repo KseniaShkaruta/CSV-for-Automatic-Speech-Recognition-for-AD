@@ -72,5 +72,5 @@ def del_words(transcript):
                         sublist['tokens'].remove(element)                       
             i =0
     except:
-        a = 0
+        pass
     return transcript, deleted_words
