@@ -42,11 +42,11 @@ def word_count(flat_transcript):
             if flat_transcript[i]['type'] == 'word':
                 cnt +=1    
                 word_indx.append(i) # add word indices here and you won't need to go through the transcript once again to collect them
-    return cnt
+    return cnt, word_indx
 
 #create a list of words to delete from transcript using random seed
 def list_del_words(flat_transcript, del_rate): 
-    total_words = word_count(flat_transcript)
+    total_words, word_indx = word_count(flat_transcript)
     del_words = int(total_words * del_rate)
     del_indx = random.sample(population=word_indx, k=del_words) # select random indices for deletion from the list of all word indices
     del_w = []
