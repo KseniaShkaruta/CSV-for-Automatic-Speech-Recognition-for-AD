@@ -57,11 +57,17 @@ def list_del_words(flat_transcript, del_rate):
 #delete words from the transcript, return the new transcript and list of deleted words
 def del_words(transcript):
     to_delete = list_del_words(flatten(transcript), 0.2)
-    deleted_words = []
-    for sublist in transcript:
-        for element in sublist['tokens']:
-            if element in to_delete:
-                deleted_words.append(element)
-                to_delete.remove(element)
-                sublist['tokens'].remove(element) 
+    deleted_words = []        
+    i = 0
+    try:
+        while i != (len(to_delete)):
+            for sublist in transcript: 
+                for element in sublist['tokens']:
+                    if to_delete[i] == element:                  
+                        deleted_words.append(element)
+                        to_delete.remove(to_delete[i])
+                        sublist['tokens'].remove(element)                       
+            i =0
+    except:
+        pass
     return transcript, deleted_words
