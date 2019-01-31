@@ -6,11 +6,9 @@ def read_one_gram():
     one_gram=[]
     one_gram_list =[]
     with open('C:/temp/lm_unpruned', 'r') as f:
-        for line in islice(f, 6, 42159, 1):
-            one_gram.append(line)
-    for i in range(len(one_gram)):
-                one_gram_list.append(one_gram[i].split(' '))
-    return one_gram_list
+        for line in islice(f, 8, 42159, 1):
+            one_gram.append(str(line.splitlines()).split(' ')[1].replace(']',''))    
+    return one_gram
 one_gram_list = read_one_gram()
 print(one_gram_list)
 
@@ -36,9 +34,4 @@ def create_cmu_sound_dict():
     return cmu_final_sound_dict
 
 phonemic_model = create_cmu_sound_dict()
-
-#DRAFT - iterate through the 1-gram list to calculate Levenshtein distance against word 'dragon'. Does not work at the moment
-for sublist in one_gram_list:  
-    if sublist[1] not in ['<s>', '</s>\n', 'year', 'florals', 'flax\n', 'f._i._v.', 'f._i._m._a.', 'f._f._a.', "f._b._i.'s", 'f._a._s._d.', 'f._a._f._b.', 'espressos', 'emulates'] :
-        test = nltk.edit_distance(phonemic_model["dragon"], phonemic_model[sublist[1]], transpositions = False)
-print(test) 
+ 
