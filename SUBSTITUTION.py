@@ -22,15 +22,7 @@ def create_cmu_sound_dict():
             if len(i_s) > 1:
                 word = i_s[0]
                 syllables = i_s[1:]
-                final_sound = ""
-                final_sound_switch = 0
-                for j in syllables:
-                    if "1" in j:
-                        final_sound_switch = 1
-                        final_sound += j
-                    elif final_sound_switch == 1:
-                        final_sound += j
-            cmu_final_sound_dict[word.lower()] = final_sound
+            cmu_final_sound_dict[word.lower()] = " ".join(syllables)
     return cmu_final_sound_dict
 
 phonemic_model = create_cmu_sound_dict()
