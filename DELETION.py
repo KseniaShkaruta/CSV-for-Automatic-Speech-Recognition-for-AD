@@ -36,41 +36,32 @@ def flatten(transcript):
 #count number of words in transcript
 def word_count(flat_transcript):
     cnt = 0
+    word_indx = [] # initialise list of all the word indices
     for i in range(len(flat_transcript)):        
         if type(flat_transcript[i]) is dict:
             if flat_transcript[i]['type'] == 'word':
                 cnt +=1    
-    return cnt
+                word_indx.append(i) # add word indices here and you won't need to go through the transcript once again to collect them
+    return cnt, word_indx
 
 #create a list of words to delete from transcript using random seed
 def list_del_words(flat_transcript, del_rate): 
-    total_words = word_count(flat_transcript)
+    total_words, word_indx = word_count(flat_transcript)
     del_words = int(total_words * del_rate)
-    del_indx=[]
+    del_indx = random.sample(population=word_indx, k=del_words) # select random indices for deletion from the list of all word indices
     del_w = []
-    while len(del_indx) < del_words:
-        r=random.randint(0,total_words)
-        if r not in del_indx:
-            if type(flat_transcript[r]) is dict:
-                if flat_transcript[r]['type'] == 'word':
-                    del_indx.append(r)
-                    del_w.append(flat_transcript[r])    
+    for i in del_indx:
+        del_w.append(flat_transcript[i])
     return del_w
 
 #delete words from the transcript, return the new transcript and list of deleted words
 def del_words(transcript):
     to_delete = list_del_words(flatten(transcript), 0.2)
-    deleted_words = []        
-    i = 0
-    try:
-        while i != (len(to_delete)):
-            for sublist in transcript: 
-                for element in sublist['tokens']:
-                    if to_delete[i] == element:                  
-                        deleted_words.append(element)
-                        to_delete.remove(to_delete[i])
-                        sublist['tokens'].remove(element)                       
-            i =0
-    except:
-        pass
+    deleted_words = []
+    for sublist in transcript:
+        for element in sublist['tokens']:
+            if element in to_delete:
+                deleted_words.append(element)
+                to_delete.remove(element)
+                sublist['tokens'].remove(element) 
     return transcript, deleted_words
