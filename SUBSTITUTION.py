@@ -86,52 +86,78 @@ def create_cmu_sound_dict():
             cmu_final_sound_dict[word.lower()] = " ".join(syllables)
     return cmu_final_sound_dict
 
-#create a list of the words to use for substitution, return both lists: words_to_substitute, substitute_with
-def subst_with(transcript):
-    one_gram_list = reduced_one_gram_list() 
+
+#the following three functions are to create a dictionary of unique unigrams from all transcripts storing the corresponding word with the minimum Levenstein distance and distance itself 
+
+#read in unigrams from all the transcripts into a unique list
+def create_tr_unigrm():
+    tr_unigrm_unique = []
+    with open('C:/temp/tr_unigrams.txt', 'r') as tr_unigrm:
+        tr_unigrm = tr_unigrm.read().replace('"','').replace("\\\\u2019", "'").replace('\\\\n', '').replace("\\\\t", "").replace("\\\\", "")
+        tr_unigrm = tr_unigrm.split(", ")
+        for i in range(len(tr_unigrm)):
+            if tr_unigrm[i] not in tr_unigrm_unique:
+                tr_unigrm_unique.append(tr_unigrm[i])
+    return tr_unigrm_unique
+
+#create dist and to_sub lists that will be used to create transcript unigram dictionary
+#NOTE - I was not able to run on the full transcript unigram - my pc crashes
+def create_subts_dist_lists():
+    tr_unigrm = create_tr_unigrm()
+    mini = tr_unigrm[:50] #use a smaller subset for testing
+    one_gram_list = reduced_one_gram_list()
     phonemic_model = create_cmu_sound_dict()
-    words_to_substitute = words_to_subst(flatten(transcript), 0.2)
-    substitute_with = []
-    for j in range(len(words_to_substitute)):
-        if words_to_substitute[j] not in phonemic_model:
+    to_sub = []
+    dist = []
+    for j in range(len(mini)):
+        if mini[j] not in phonemic_model:
             r=random.randint(0,len(one_gram_list)-1)
-            substitute_with.append(one_gram_list[r])
-        else:
-            dist_list = []
-            wd_list = []    
+            to_sub.append(one_gram_list[r])
+            dist.append(-1)
+        else:                
+            temp_sub = []
+            temp_dist = []
             for i in range(len(one_gram_list)):
-                if one_gram_list[i] != words_to_substitute[j]:
-                    if one_gram_list[i] in phonemic_model:                
-                        dist_list.append(nltk.edit_distance(phonemic_model[words_to_substitute[j]], phonemic_model[one_gram_list[i]], transpositions = False))#calculate Levenstein distance
-                        wd_list.append(one_gram_list[i])                   
+                if mini[j] != one_gram_list[i]:
+                    if one_gram_list[i] in phonemic_model: 
+                        temp_dist.append(nltk.edit_distance(phonemic_model[mini[j]], phonemic_model[one_gram_list[i]], transpositions = False))
+                        temp_sub.append(one_gram_list[i])
                     else:
-                        dist_list.append(99)
-                        wd_list.append('NOT_IN_DICTNRY') 
+                        temp_dist.append(99)
+                        temp_sub.append('NOT_IN_DICTNRY') 
                 else:
-                    dist_list.append(100)
-                    wd_list.append('SAME_WORD')
-            substitute_with.append(wd_list[dist_list.index(min(dist_list))])#pick with word that had the smallest Levenstein distance
-    return words_to_substitute, substitute_with
-
-#substitute words in the transcript, return the new transcript and list of substituted words
-def subst_words(transcript):
-    to_substitute, substitute_with = subst_with(transcript)
-    substituted_words =[]
-    i = 0 
-    try:
-        while i != (len(to_substitute)):
-            for sublist in transcript: 
-                i = 0
-                for element in sublist['tokens']:
-                    if element['type'] == 'word':   
-                        if element['value'] == to_substitute[i]:  #find word that needs to be substituted in transcript                        
-                            substituted_words.append(element['value'])
-                            element['value'] = substitute_with[i]
-                            to_substitute.remove(to_substitute[i])
-                            substitute_with.remove(substitute_with[i])                            
-    except:
-        pass
-    return transcript, substituted_words
+                    temp_dist.append(100)
+                    temp_sub.append('SAME_WORD')
+            dist.append(min(temp_dist))
+            to_sub.append(temp_sub[temp_dist.index(min(temp_dist))])
+    return mini, to_sub, dist
  
+#create transcript unigram dictionary
+def tr_unigram_dict():
+    mini, to_sub, dist = create_subts_dist_lists()
+    tr_unigrm_dict = {}
+    for i in range(len(mini)):
+        tr_unigrm_dict[mini[i]] = [to_sub[i], dist[i]]
+    return tr_unigrm_dict
 
+#DRAFT: the re-write of the substitution function
+#NOTE - I am not able to run it even on a subset of 50 unigram words from transcript - my pc crashes
+transcript = store_tr(df.iloc[0,2])
+words_to_sub = create_tr_unigrm()[:3] #use just a few words from the transcript unigram list for the list of words to substitute for testing
+tr_unigrm_dict = tr_unigram_dict()
+
+substituted_words =[]
+cnt = 0
+i = 0
+try:
+    while i != (len(words_to_sub)):
+        for sublist in transcript:                 
+            for element in sublist['tokens']:
+                if element['type'] == 'word':   
+                    if element['value'] == words_to_sub[i]:                         
+                        substituted_words.append(element['value'])                      
+                        element['value'] = tr_unigrm_dict[words_to_sub[i]][0]
+                        words_to_sub.remove(words_to_sub[i])                        
+except:
+    pass
     
