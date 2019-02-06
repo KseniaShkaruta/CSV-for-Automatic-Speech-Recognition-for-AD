@@ -6,12 +6,12 @@ from itertools import islice
 from heapq import nsmallest
 
 #read in csv file, delete 20% of words from json manual transcript, output csv with altered manual transcript as new column
-df = pd.read_csv('../../ASRforAD.csv')
+df = pd.read_csv('../ASRforAD.csv')
 
 df = df.merge(df.json_utterances_man.apply(lambda s: pd.Series(subst_fn(s))), left_index=True, right_index=True)
 df.rename(columns = {0:'json_utterances_man_with_SUBSTITUTED_WORDS', 1:'SUBSTITUTED_WORDS'}, inplace =True )
 
-df.to_csv('C:/temp/DELETION_ASRforAD.csv')
+df.to_csv('../SUBSTITUTION_ASRforAD.csv')
 
 print(df.head())
 
@@ -50,7 +50,7 @@ def word_count(flat_transcript):
     return cnt, word_indx
 
 #create a list of random words to substitute in transcript 
-def words_to_subst(flat_transcript, subst_rate): 
+def words_to_subst_fn(flat_transcript, subst_rate): 
     total_words, word_indx = word_count(flat_transcript)
     subst_words = int(total_words * subst_rate) #how many words need to be substituted
     subst_indx=random.sample(population=word_indx, k=subst_words) # select random indices for deletion from the list of all word indices
@@ -86,52 +86,61 @@ def create_cmu_sound_dict():
             cmu_final_sound_dict[word.lower()] = " ".join(syllables)
     return cmu_final_sound_dict
 
-#create a list of the words to use for substitution, return both lists: words_to_substitute, substitute_with
-def subst_with(transcript):
-    one_gram_list = reduced_one_gram_list() 
-    phonemic_model = create_cmu_sound_dict()
-    words_to_substitute = words_to_subst(flatten(transcript), 0.2)
-    substitute_with = []
-    for j in range(len(words_to_substitute)):
-        if words_to_substitute[j] not in phonemic_model:
-            r=random.randint(0,len(one_gram_list)-1)
-            substitute_with.append(one_gram_list[r])
-        else:
-            dist_list = []
-            wd_list = []    
-            for i in range(len(one_gram_list)):
-                if one_gram_list[i] != words_to_substitute[j]:
-                    if one_gram_list[i] in phonemic_model:                
-                        dist_list.append(nltk.edit_distance(phonemic_model[words_to_substitute[j]], phonemic_model[one_gram_list[i]], transpositions = False))#calculate Levenstein distance
-                        wd_list.append(one_gram_list[i])                   
-                    else:
-                        dist_list.append(99)
-                        wd_list.append('NOT_IN_DICTNRY') 
-                else:
-                    dist_list.append(100)
-                    wd_list.append('SAME_WORD')
-            substitute_with.append(wd_list[dist_list.index(min(dist_list))])#pick with word that had the smallest Levenstein distance
-    return words_to_substitute, substitute_with
+#read in unigrams from all the transcripts into a unique list
+def create_tr_unigrm():
+    tr_unigrm_unique = []
+    with open('../tr_unigrams.txt', 'r') as tr_unigrm:
+        tr_unigrm = tr_unigrm.read().replace('"','').replace("\\\\u2019", "'").replace('\\\\n', '').replace("\\\\t", "").replace("\\\\u00e9", "é").replace("\\\\u00e1", "á").replace("\\\\u00ef", "ï").replace("\\\\u02dc", "~").replace("\\\\u2018", "'").replace("\\\\u2026", "...").replace("\\\\","")
+        tr_unigrm = tr_unigrm.split(", ")
+        for i in range(len(tr_unigrm)):
+            if tr_unigrm[i] not in tr_unigrm_unique:
+                tr_unigrm_unique.append(tr_unigrm[i])
+    return tr_unigrm_unique
 
-#substitute words in the transcript, return the new transcript and list of substituted words
+#create a dictionary for all the unique unigrams from all the transcripts unigram dictionary. Dictionary will contain corresponding word with a minimum Levenstein distance as well as the distance itself
+def create_tr_unigram_dict():
+    tr_unigrm = create_tr_unigrm()    
+    one_gram_list = create_one_gram_list()
+    phonemic_model = create_cmu_sound_dict()
+    tr_unigrm_dict = {}
+    for j in range(len(tr_unigrm)):
+        if tr_unigrm[j] not in phonemic_model:
+            r=random.randint(0,len(one_gram_list)-1)    #if  unigram from transcript dictionary not in phonemic model return a random value from the unigram list
+            tr_unigrm_dict[tr_unigrm[j]] = [one_gram_list[r], -1]   #set distance to -1      
+        else:                
+            temp_sub = []
+            temp_dist = []
+            for i in range(len(one_gram_list)):
+                if tr_unigrm[j] != one_gram_list[i]:
+                    if one_gram_list[i] in phonemic_model: 
+                        temp_dist.append(nltk.edit_distance(phonemic_model[tr_unigrm[j]], phonemic_model[one_gram_list[i]], transpositions = False))
+                        temp_sub.append(one_gram_list[i])
+                    else:
+                        temp_dist.append(99)
+                        temp_sub.append('NOT_IN_DICTNRY') 
+                else:
+                    temp_dist.append(100)
+                    temp_sub.append('SAME_WORD')
+            tr_unigrm_dict[tr_unigrm[j]] = [temp_sub[temp_dist.index(min(temp_dist))], min(temp_dist)]
+    return tr_unigrm_dict
+
+#function to substitute the words in transcript. Substitute words that are in the random substitution list with the values from the tr_unigram_dictionary 
 def subst_words(transcript):
-    to_substitute, substitute_with = subst_with(transcript)
+    tr_unigrm_dict = create_tr_unigram_dict()
+    words_to_sub = words_to_subst_fn(flatten(transcript), 0.2)
     substituted_words =[]
-    i = 0 
+    i = 0
     try:
-        while i != (len(to_substitute)):
-            for sublist in transcript: 
-                i = 0
+        while i != (len(words_to_sub)):
+            for sublist in transcript:                 
                 for element in sublist['tokens']:
-                    if element['type'] == 'word':   
-                        if element['value'] == to_substitute[i]:  #find word that needs to be substituted in transcript                        
-                            substituted_words.append(element['value'])
-                            element['value'] = substitute_with[i]
-                            to_substitute.remove(to_substitute[i])
-                            substitute_with.remove(substitute_with[i])                            
+                    if element['type'] == 'word':                 
+                        if element['value'] == words_to_sub[i]:
+                            substituted_words.append(element['value']) 
+                            element['value'] = final_dict[words_to_sub[i]][0]
+                            words_to_sub.remove(words_to_sub[i])                            
+            i = 0   
+
     except:
         pass
     return transcript, substituted_words
- 
-
-    
