@@ -61,10 +61,10 @@ def words_to_subst_fn(flat_transcript, subst_rate):
 
 
 #read in 1-gram words from the dictionary, return 2,000 most common words
-def reduced_one_gram_list():
+def create_one_gram_list():
     one_gram=[]
     one_gram_list =[]
-    with open('C:/temp/lm_unpruned', 'r') as f:
+    with open('../lm_unpruned', 'r') as f: # @@##%!!!
         for line in islice(f, 8, 42159, 1): #read in words only from 1-gram list
             one_gram.append([int(''.join(e for e in (str(line.splitlines()).split(' ')[0]) if e.isalnum())), str(line.splitlines()).split(' ')[1].replace(']','').replace('[','')])
     one_gram.remove([159267, '<unk>']) #remove uknown value from the list
@@ -76,7 +76,7 @@ def reduced_one_gram_list():
 #create phonetic dictionary
 def create_cmu_sound_dict():
     cmu_final_sound_dict = {}
-    with open('C:/temp/c06d') as cmu_dict:
+    with open('../c06d') as cmu_dict:
         cmu_dict = cmu_dict.read().split("\n")
         for i in cmu_dict:
             i_s = i.split()
@@ -85,6 +85,8 @@ def create_cmu_sound_dict():
                 syllables = i_s[1:]
             cmu_final_sound_dict[word.lower()] = " ".join(syllables)
     return cmu_final_sound_dict
+
+phonemic_model = create_cmu_sound_dict()
 
 #read in unigrams from all the transcripts into a unique list
 def create_tr_unigrm():
@@ -101,7 +103,6 @@ def create_tr_unigrm():
 def create_tr_unigram_dict():
     tr_unigrm = create_tr_unigrm()    
     one_gram_list = create_one_gram_list()
-    phonemic_model = create_cmu_sound_dict()
     tr_unigrm_dict = {}
     for j in range(len(tr_unigrm)):
         if tr_unigrm[j] not in phonemic_model:
@@ -124,9 +125,10 @@ def create_tr_unigram_dict():
             tr_unigrm_dict[tr_unigrm[j]] = [temp_sub[temp_dist.index(min(temp_dist))], min(temp_dist)]
     return tr_unigrm_dict
 
+tr_unigrm_dict = create_tr_unigram_dict()
+
 #function to substitute the words in transcript. Substitute words that are in the random substitution list with the values from the tr_unigram_dictionary 
 def subst_words(transcript):
-    tr_unigrm_dict = create_tr_unigram_dict()
     words_to_sub = words_to_subst_fn(flatten(transcript), 0.2)
     substituted_words =[]
     i = 0
@@ -137,7 +139,7 @@ def subst_words(transcript):
                     if element['type'] == 'word':                 
                         if element['value'] == words_to_sub[i]:
                             substituted_words.append(element['value']) 
-                            element['value'] = final_dict[words_to_sub[i]][0]
+                            element['value'] = tr_unigrm_dict[words_to_sub[i]][0]
                             words_to_sub.remove(words_to_sub[i])                            
             i = 0   
 
