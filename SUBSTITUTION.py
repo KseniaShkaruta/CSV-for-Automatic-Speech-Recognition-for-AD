@@ -8,16 +8,16 @@ from heapq import nsmallest
 #read in csv file, delete 20% of words from json manual transcript, output csv with altered manual transcript as new column
 df = pd.read_csv('../ASRforAD.csv')
 
-df = df.merge(df.json_utterances_man.apply(lambda s: pd.Series(subst_fn(s))), left_index=True, right_index=True)
-df.rename(columns = {0:'json_utterances_man_with_SUBSTITUTED_WORDS', 1:'SUBSTITUTED_WORDS'}, inplace =True )
+df = df.merge(df.json_utterances_man.apply(lambda s: pd.Series(subst_fn(s, 0.2))), left_index=True, right_index=True)
+df.rename(columns = {0:'json_utterances_man_with_SUBSTITUTED_WORDS_20', 1:'SUBSTITUTED_WORDS_20'}, inplace =True )
 
 df.to_csv('../SUBSTITUTION_ASRforAD.csv')
 
 print(df.head())
 
 # main fn
-def subst_fn(df):    
-    return subst_words(store_tr(df))
+def subst_fn(df, rate):    
+    return subst_words(store_tr(df), rate)
 
 #store json transcript
 def store_tr(df_row):       
@@ -56,7 +56,7 @@ def words_to_subst_fn(flat_transcript, subst_rate):
     subst_indx=random.sample(population=word_indx, k=subst_words) # select random indices for deletion from the list of all word indices
     subst_w = []
     for i in subst_indx:        
-        subst_w.append(flat_transcript[i]['value'])   
+        subst_w.append(flat_transcript[i])   
     return subst_w
 
 
@@ -128,21 +128,20 @@ def create_tr_unigram_dict():
 tr_unigrm_dict = create_tr_unigram_dict()
 
 #function to substitute the words in transcript. Substitute words that are in the random substitution list with the values from the tr_unigram_dictionary 
-def subst_words(transcript):
-    words_to_sub = words_to_subst_fn(flatten(transcript), 0.2)
+def subst_words(transcript, rate):
+    words_to_sub = words_to_subst_fn(flatten(transcript), rate)
     substituted_words =[]
-    i = 0
     try:
-        while i != (len(words_to_sub)):
+        while 0 != (len(words_to_sub)):
             for sublist in transcript:                 
                 for element in sublist['tokens']:
-                    if element['type'] == 'word':                 
-                        if element['value'] == words_to_sub[i]:
-                            substituted_words.append(element['value']) 
-                            element['value'] = tr_unigrm_dict[words_to_sub[i]][0]
-                            words_to_sub.remove(words_to_sub[i])                            
-            i = 0   
-
+                    if words_to_sub[0] == element: 
+                        substituted_words.append(element['value'])
+                        if words_to_sub[0]['value'].lower() in tr_unigrm_dict.keys():
+                            element['value'] = tr_unigrm_dict[words_to_sub[0]['value'].lower()][0]
+                        else:
+                            element['value'] = 'weird_word' # change to whatever you wish here, will be needed for testing
+                        words_to_sub.remove(words_to_sub[0])
     except:
         pass
     return transcript, substituted_words
