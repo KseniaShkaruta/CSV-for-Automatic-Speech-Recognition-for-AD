@@ -56,7 +56,7 @@ def words_to_subst_fn(flat_transcript, subst_rate):
     subst_indx=random.sample(population=word_indx, k=subst_words) # select random indices for deletion from the list of all word indices
     subst_w = []
     for i in subst_indx:        
-        subst_w.append(flat_transcript[i])   
+        subst_w.append(flat_transcript[i]['value'].lower().replace("\\\\u2019", "'").replace('\\\\n', '').replace("\\\\t", "").replace("\\\\u00e9", "é").replace("\\\\u00e1", "á").replace("\\\\u00ef", "ï").replace("\\\\u02dc", "~").replace("\\\\u2018", "'").replace("\\\\u2026", "...").replace("\\\\",""))
     return subst_w
 
 
@@ -64,7 +64,7 @@ def words_to_subst_fn(flat_transcript, subst_rate):
 def create_one_gram_list():
     one_gram=[]
     one_gram_list =[]
-    with open('../lm_unpruned', 'r') as f: # @@##%!!!
+    with open('../lm_unpruned', 'r') as f: 
         for line in islice(f, 8, 42159, 1): #read in words only from 1-gram list
             one_gram.append([int(''.join(e for e in (str(line.splitlines()).split(' ')[0]) if e.isalnum())), str(line.splitlines()).split(' ')[1].replace(']','').replace('[','')])
     one_gram.remove([159267, '<unk>']) #remove uknown value from the list
@@ -72,6 +72,9 @@ def create_one_gram_list():
     for i in temp:
         one_gram_list.append(i[1]) #store only words
     return one_gram_list
+
+one_gram_list = create_one_gram_list()
+
 
 #create phonetic dictionary
 def create_cmu_sound_dict():
@@ -88,6 +91,7 @@ def create_cmu_sound_dict():
 
 phonemic_model = create_cmu_sound_dict()
 
+
 #read in unigrams from all the transcripts into a unique list
 def create_tr_unigrm():
     tr_unigrm_unique = []
@@ -98,6 +102,9 @@ def create_tr_unigrm():
             if tr_unigrm[i] not in tr_unigrm_unique:
                 tr_unigrm_unique.append(tr_unigrm[i])
     return tr_unigrm_unique
+
+tr_unigrm = create_tr_unigrm()
+
 
 #create a dictionary for all the unique unigrams from all the transcripts unigram dictionary. Dictionary will contain corresponding word with a minimum Levenstein distance as well as the distance itself
 def create_tr_unigram_dict():
@@ -127,6 +134,7 @@ def create_tr_unigram_dict():
 
 tr_unigrm_dict = create_tr_unigram_dict()
 
+
 #function to substitute the words in transcript. Substitute words that are in the random substitution list with the values from the tr_unigram_dictionary 
 def subst_words(transcript, rate):
     words_to_sub = words_to_subst_fn(flatten(transcript), rate)
@@ -135,10 +143,10 @@ def subst_words(transcript, rate):
         while 0 != (len(words_to_sub)):
             for sublist in transcript:                 
                 for element in sublist['tokens']:
-                    if words_to_sub[0] == element: 
+                    if words_to_sub[0] == element['value']: 
                         substituted_words.append(element['value'])
-                        if words_to_sub[0]['value'].lower() in tr_unigrm_dict.keys():
-                            element['value'] = tr_unigrm_dict[words_to_sub[0]['value'].lower()][0]
+                        if words_to_sub[0] in tr_unigrm_dict.keys():
+                            element['value'] = tr_unigrm_dict[words_to_sub[0]['value']][0]
                         else:
                             element['value'] = 'weird_word' # change to whatever you wish here, will be needed for testing
                         words_to_sub.remove(words_to_sub[0])
