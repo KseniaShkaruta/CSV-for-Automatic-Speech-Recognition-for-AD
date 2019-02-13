@@ -1,9 +1,12 @@
 from itertools import islice
 from heapq import nlargest
 
-#main function
-temp = create_bi_gram_dict(bi_gram_list)
-print(len(temp))
+#test bi_gram dict
+bi_gram_dict = create_bi_gram_dict(bi_gram_list)
+print(len(bi_gram_dict))
+print(len(bi_gram_dict['son']))
+print(bi_gram_dict['son'])
+
 
 #store bi-gram as a list of lists of three elements: word, following word and probability of occurance of the following word
 def read_bi_gram():
@@ -17,17 +20,16 @@ def read_bi_gram():
     return bi_gram
 
 bi_gram_list = read_bi_gram()
-print(len(bi_gram))
 
 
 #create bi-gram dictionary based on the list of bi-grams
 def create_bi_gram_dict(bi_gram_list):
     bi_gram_dict = {}
 
-    for i in range(len(bi_gram)): 
-        if bi_gram[i][1] in bi_gram_dict.keys():  
-            bi_gram_dict[bi_gram[i][1]].append([bi_gram[i][0], bi_gram[i][2]])  
+    for i in range(len(bi_gram_list)): 
+        if bi_gram_list[i][1] in bi_gram_dict.keys():  
+            bi_gram_dict[bi_gram_list[i][1]].append([bi_gram_list[i][0], bi_gram_list[i][2]])  
         else:  
-            bi_gram_dict[bi_gram[i][1]] = [[bi_gram[i][0], bi_gram[i][2]]]
+            bi_gram_dict[bi_gram_list[i][1]] = [[bi_gram_list[i][0], bi_gram_list[i][2]]]
     
-    return bi_gram_dict 
+    return bi_gram_dict  
