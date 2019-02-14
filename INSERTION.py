@@ -141,6 +141,6 @@ def insert_words(transcript, rate):
 
     for sublist in transcript: 
         for element in sublist['tokens']:
-            if element['type'] in('REF', 'INS', 'RND'):
+            if element['type'] in('REF', 'INS', 'INS_SEC', 'RND'):
                 element['type'] = 'word'
-    return json.dumps(transcript), json.dumps(inserted_words)
+    return json.dumps(transcript), inserted_words
