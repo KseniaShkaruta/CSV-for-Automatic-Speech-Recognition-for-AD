@@ -8,9 +8,8 @@ You can install from here (conda is recommended): https://jupyterlab.readthedocs
 
 ### Prerequisites
 You will need the following libraries:
-
-  •	pandas
-  •	json
+*pandas
+*json
   •	random
   •	nltk
   •	itertools
