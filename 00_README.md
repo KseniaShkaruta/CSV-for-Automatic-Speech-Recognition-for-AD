@@ -17,5 +17,6 @@ You will need the following libraries:
   •	heapq
 
 You will need the following files:
+
         •	Uni-gram and bi-gram words to substitute with the most similar word(uni-gram) and insert the word that is most likely to follow(bi-gram):
         •	c-06d to create a dictionary of phonemic models: http://www.greenteapress.com/thinkpython/code/c06d?fbclid=IwAR3kK8u0l48ksaGi8v60FZLDsSjpdjhw3dCCeZdRDS0VkBhgeR5YyzSUTuI
