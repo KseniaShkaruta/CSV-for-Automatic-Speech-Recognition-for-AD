@@ -30,3 +30,14 @@ Code is broken down into the following files:
 
 ### 2.	Deletion
 - Delete words from manual transcript that match those on the random_words_list(fl_tr, rate)
+
+### 3.	Substitution
+- create_cmu_sound_dict() creates a dictionary of phonemic model of words. This will be used to calculate the Levenstein distance between the words to pick the most phonemically similar word for substitution
+- Ideally, the substitution function would calculate a Levenstein distance for a word to substitute from random_words_list(fl_tr, rate) and each word from the one_gram_list that was created by create_one_gram_list() and pick the word with the shortest distance for substitution. However, the processing time of this function was too long (~80 seconds to process 1,000 words). Therefore, a design decision was made to create a dictionary for all unique words from all manual speech transcripts with the words as keys and word with shortest Levenstein distance along with the distance itself as list of values - create_tr_unigram_dict().
+- Note, that transcript had several cases of Unicodes within the word values, a decision not to clean those was made based on the assumption that a transcript should be going through cleansing and this code should not do this. Since these cases would not match any word in one_gram_list a random value is returned for substitution
+- Note, to reduce processing time a reduced_one_gram list is used that contains 2,000 most used words
+
+### 4.	Insertion
+- create_bi_gram_dict(bi_gram_list) that store words as keys and corresponding words with the probability of this word to follow as a list of values. 
+- Use words from random_words_list(fl_tr, rate) as a reference for insertion a new word i.e. insert after that word. To determine which words to insert use bi_gram_dict – insert most likely word to follow (i.e. highest probability) if it does not match the following word in transcript, else insert the next most probable word. If word is not found in bi-gram insert a random word from uni-gram
+
