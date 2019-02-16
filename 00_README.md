@@ -10,8 +10,8 @@ You can install from here (conda is recommended): https://jupyterlab.readthedocs
 You will need the following libraries:
 *pandas
 *json
-  •	random
-  •	nltk
+- random
+- nltk
   •	itertools
   •	heapq
 
