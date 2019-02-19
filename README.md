@@ -1,4 +1,4 @@
-# Automatic Speech Recognition for People with Alzheimer's Disease
+# CSV for Automatic Speech Recognition for People with Alzheimer's Disease
 Manipulation of csv and json files to delete/insert/substitute words from/into manual speech transcripts. Altered transcripts will be used to improve the performance of the automatic speech recognition (ASR).
 
 
